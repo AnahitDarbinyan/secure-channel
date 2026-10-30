@@ -1,3 +1,4 @@
+
 #ifndef SECURE_CRYPTO_H
 #define SECURE_CRYPTO_H
 
@@ -25,7 +26,7 @@ static int generate_key_pair(EVP_PKEY **key)
     EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_X25519, NULL);
 
     if (ctx == NULL)
-        return 0;
+        return -1;
 
     int ok = EVP_PKEY_keygen_init(ctx) > 0 &&
              EVP_PKEY_keygen(ctx, key) > 0;
@@ -34,8 +35,9 @@ static int generate_key_pair(EVP_PKEY **key)
     return ok;
 }
 
-static int export_public_key(EVP_PKEY *key,
-                             unsigned char public_key[PUBLIC_KEY_SIZE])
+static int export_public_key(
+    EVP_PKEY *key,
+    unsigned char public_key[PUBLIC_KEY_SIZE])
 {
     size_t length = PUBLIC_KEY_SIZE;
 
@@ -158,6 +160,7 @@ static int encrypt_message(
     return ok ? total : -1;
 }
 
+/* Returns plaintext length on success, -1 on failure. */
 static int decrypt_message(
     const unsigned char key[KEY_SIZE],
     const unsigned char nonce[NONCE_SIZE],
@@ -171,7 +174,7 @@ static int decrypt_message(
     int total = 0;
 
     if (ctx == NULL)
-        return 0;
+        return -1;
 
     int ok =
         EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL) > 0 &&
@@ -199,10 +202,10 @@ static int decrypt_message(
     EVP_CIPHER_CTX_free(ctx);
 
     if (!ok)
-        return 0;
+        return -1;
 
     plaintext[total] = '\0';
-    return 1;
+    return total;
 }
 
 static int send_all(int fd, const void *buffer, size_t length)
@@ -238,5 +241,19 @@ static int receive_all(int fd, void *buffer, size_t length)
 
     return 1;
 }
+
+int encrypt_tcp_payload(
+    const unsigned char key[KEY_SIZE],
+    const unsigned char *plaintext,
+    int plaintext_length,
+    unsigned char *output
+);
+
+int decrypt_tcp_payload(
+    const unsigned char key[KEY_SIZE],
+    const unsigned char *input,
+    int input_length,
+    unsigned char *plaintext
+);
 
 #endif

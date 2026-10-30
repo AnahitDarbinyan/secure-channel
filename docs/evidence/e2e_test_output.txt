@@ -1,0 +1,31 @@
+== 1. Topology
+Topology set up: pc1 can reach pc2.
+== 2. Start devices and run the handshake
+  PASS: handshake completed on both devices
+== 3. Enable protection and capture
+Protecting TCP 10.0.1.0/24 -> 10.0.3.0/24, destination port 5001
+== 4. Send data PC1 -> PC2
+== 5. Verify
+  PASS: PC2 received exactly what PC1 sent (sha256 match)
+  PASS: plaintext NOT visible on the Device1->Device2 link
+  PASS: plaintext IS visible at PC2 (restored)
+  PASS: Device1 encrypted packets
+  PASS: Device2 verified tags and decrypted packets
+  PASS: no packet was dropped during the normal transfer
+  PASS: every nonce counter is unique (strictly increasing, no repeats)
+  PASS: largest TCP payload: 1424 bytes at PC2 vs 1448 on the device link (+24 = counter 8 + GCM tag 16)
+== 6. Forged packet injection (plaintext payload straight onto the device link)
+  PASS: Device2 rejected the forged packet (authentication failed)
+  PASS: forged data never reached PC2
+
+Device1 log (last lines):
+[ENCRYPT] counter=2946  1476 -> 1500 bytes
+[ENCRYPT] counter=2947  1476 -> 1500 bytes
+[ENCRYPT] counter=2948  296 -> 320 bytes
+Device2 log (last lines):
+[DECRYPT] tag OK  1500 -> 1476 bytes
+[DECRYPT] tag OK  320 -> 296 bytes
+[DROP] AUTHENTICATION FAILED (bad tag)
+
+RESULT: 11 passed, 0 failed
+Evidence saved in build/e2e/ (wire_d1_d2.pcap = encrypted link, pc2.pcap = restored)

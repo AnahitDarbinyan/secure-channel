@@ -1,0 +1,30 @@
+# Compiled programs
+secure_server
+secure_client
+device1
+device2
+dh_test
+aes_test
+hkdf_test
+crypto_test
+tcp_server_test
+tcp_client_test
+
+# Object and library files
+*.o
+*.a
+*.so
+
+# Debug files
+core
+core.*
+
+# Editor and operating system files
+.DS_Store
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.log
